@@ -143,3 +143,4 @@ class UserLogoutResource(Resource) :
         jwt_blocklist.add(jti)
 
         return {'result' : 'success'} , 200
+

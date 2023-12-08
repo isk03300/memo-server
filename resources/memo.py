@@ -56,7 +56,7 @@ class MemoListResource(Resource) :
 
         try :
             connection = get_connection()
-            query = '''select *
+            query = '''select id, title, date, content
                         from memo;'''
             
             cursor = connection.cursor( dictionary= True)
@@ -67,8 +67,6 @@ class MemoListResource(Resource) :
             i = 0
             for row in result_list :
                 result_list[i]['date'] = row['date'].isoformat()
-                result_list[i]['createdAt'] = row['createdAt'].isoformat()
-                result_list[i]['updatedAt'] = row['updatedAt'].isoformat()
                 i = i + 1
             
             print(result_list)
@@ -170,11 +168,17 @@ class MemoMyResource(Resource) :
 
         user_id = get_jwt_identity()
 
+        # 쿼리 스트링 또는 쿼리 파라미터를 통해서 데이터를 받아온다.
+        offset = request.args.get('offset')
+        limit = request.args.get('limit')
+
         try :
             connection = get_connection()
-            query = '''select *
+            query = '''select id, title, date,content
                             from memo
-                            where userId = %s;'''
+                            where userId = %s
+                            order by date 
+                            limit '''+str(offset) +''','''+str(limit)+''';'''
             record = (user_id, )
             cursor = connection.cursor(dictionary=True)
             cursor.execute(query,record)
@@ -183,8 +187,6 @@ class MemoMyResource(Resource) :
             i = 0
             for row in result_list :
                 result_list[i]['date'] = row['date'].isoformat()
-                result_list[i]['createdAt'] = row['createdAt'].isoformat()
-                result_list[i]['updatedAt'] = row['updatedAt'].isoformat()
                 i = i + 1
 
             print()
