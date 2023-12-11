@@ -189,6 +189,7 @@ class MemoMyResource(Resource) :
                 result_list[i]['date'] = row['date'].isoformat()
                 i = i + 1
 
+            print(user_id)
             print()
             print(result_list)
             print()
@@ -204,4 +205,64 @@ class MemoMyResource(Resource) :
         return {'result' : 'success',
                 'items' : result_list,
                 'count' : len(result_list)} , 200
+    
+
+class MemoFollowResource(Resource) :
+
+
+    @jwt_required()
+    def get(self) :
+
+        offset = request.args.get('offset')
+        limit = request.args.get('limit')
+        user_id = get_jwt_identity()
+
+        try :
+            connection = get_connection()
+
+            query = '''select m.id memoId , m.userId, m.title,
+                                m.date, m.content, m.createdAt, m.updatedAt,
+                                u.nickname
+                                from follow f
+                                join memo m
+                                on f.followeeId = m.userId
+                                join user u
+                                on m.userId = u.id
+                                where f.followerId = %s and m.date > now()
+                                order by m.date desc
+                                limit ''' +str(offset) +''','''+str(limit) +''' ;'''
+            
+            record = (user_id, )
+
+            cursor = connection.cursor(dictionary= True)
+            cursor.execute(query,record)
+
+            resuli_list = cursor.fetchall()
+
+            i = 0
+            for row in resuli_list :
+                resuli_list[i]['date'] = row['date'].isoformat()
+                resuli_list[i]['createdAt']=row['createdAt'].isoformat()
+                resuli_list[i]['updatedAt']=row['updatedAt'].isoformat()
+                i = i + 1
+                
+        
+
+            print()
+            print(resuli_list)
+            print()
+
+            cursor.close()
+            connection.close()
+        
+        except Error as e:
+            print(e)
+            cursor.close()
+            connection.close()
+            return {'error' : str(e)}, 400
+
+        
+        return {'result' : 'success',
+                'items' : resuli_list,
+                'count' : len(resuli_list)}, 200
     
